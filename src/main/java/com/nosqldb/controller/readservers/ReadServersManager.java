@@ -20,6 +20,7 @@ import static com.nosqldb.controller.Constants.*;
  */
 @Component
 public class ReadServersManager {
+    private int idCount;
     private int count;
     private final Subject subject;
     private final ArrayList<ReadServerNode> readServerNodes;
@@ -27,6 +28,7 @@ public class ReadServersManager {
 
 
     public ReadServersManager(){
+        idCount=0;
         count=0;
         readServerNodes =new ArrayList<>();
         subject=new ReadServerSubject();
@@ -54,11 +56,12 @@ public class ReadServersManager {
                 return;
             }
         }
-        newNode=new ReadServerNode(count+1,port);
+        newNode=new ReadServerNode(idCount+1,port);
         if (!newNode.runContainer()) {
             logger.error("failed to run container at port "+port);
             return;
         }
+        idCount++;
         count++;
         readServerNodes.add(newNode);
         subject.addObserver(newNode);
@@ -94,26 +97,29 @@ public class ReadServersManager {
 
     private ReadServerNode chooseNode(){
         int minLoad=readServerNodes.get(0).getLoad();
-        int minID=0;
+        ReadServerNode minNode=null;
         for(ReadServerNode node :readServerNodes) {
             if (node.getLoad()<minLoad)
-                minID=node.getId();
+                minNode=node;
         }
-        return readServerNodes.get(minID-1);
+        return minNode;
+    }
+    private ReadServerNode getNodeById(int id){
+        for(ReadServerNode node :readServerNodes) {
+            if (node.getId()==id)
+                return node;
+        }
+        return null;
     }
 
     public void stopNode(int id) {
-        if(readServerNodes.size()==1){
-            logger.error("cannot stop last server");
-            return;
-        }
-
-        if (!readServerNodes.get(id-1).stopContainer()){
+        ReadServerNode stopped=getNodeById(id);
+        if (!stopped.stopContainer()){
             logger.error("Failed to stop server with ID: "+id);
             return;
         }
-        subject.removeObserver(readServerNodes.get(id-1));
-        readServerNodes.remove(id-1);
+        subject.removeObserver(stopped);
+        readServerNodes.remove(stopped);
         count--;
         logger.info("Stopped server with ID :"+id);
     }

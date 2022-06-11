@@ -87,6 +87,7 @@ public class ReadServerNode implements Observer {
                     .retrieve().bodyToMono(String.class).block();
             return true;
         } catch (WebClientException | IOException e) {
+            logger.error("Container failed to start with error :" +e.getMessage());
             return false;
         }
 
