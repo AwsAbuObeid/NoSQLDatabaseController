@@ -28,10 +28,10 @@ public class ReadServerNode implements Observer {
     private String containerId;
     private final int port;
     private boolean dirty;
-    private final Logger logger= LoggerFactory.getLogger(ReadServersManager.class);
+    private final Logger logger = LoggerFactory.getLogger(ReadServersManager.class);
 
     public ReadServerNode(int id, int port) {
-        dirty=false;
+        dirty = false;
         this.id = id;
         this.port = port;
     }
@@ -39,17 +39,17 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
-            String resp=WebClient.create().post().uri(DB_URL + ":" + port + "/write").
+            String resp = WebClient.create().post().uri("http://" + READ_SERVER_NAME + "_" + id + ":" + IMAGE_INTERNAL_PORT + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
                     .retrieve().bodyToMono(String.class).block();
-            if(!"OK".equals(resp))
+            if (!"OK".equals(resp))
                 throw new Exception("Bad response");
         } catch (Exception e) {
             logger.error("server with ID : " +
-                    id + " at port: " + port + " Failed to update with Error: "+e.getMessage());
-            dirty=true;
+                    id + " at port: " + port + " Failed to update with Error: " + e.getMessage());
+            dirty = true;
         }
     }
 
@@ -125,27 +125,23 @@ public class ReadServerNode implements Observer {
 
     public boolean sendSession(ObjectNode message) {
         try {
-            String response = WebClient.create().post().uri(DB_URL + ":" + port + "/addAPIKey").
+            String response = WebClient.create().post().uri("http://" + READ_SERVER_NAME + "_" + id + ":" + IMAGE_INTERNAL_PORT + "/addAPIKey").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
                     .retrieve().bodyToMono(String.class).block();
             return true;
-        } catch (WebClientException |IOException e) {
+        } catch (WebClientException | IOException e) {
             return false;
         }
     }
 
     public int getLoad() {
         try {
-            System.out.println(DB_URL + ":" + port + "/load");
 
-            System.out.println(WebClient.create().get().uri(DB_URL + ":" + "1111" + "/shit")
-                    .retrieve().bodyToMono(Integer.class).block());
-
-            return WebClient.create().get().uri(DB_URL + ":" + port + "/load").
-                   header("x-api-key", CONTROLLER_API_KEY)
-                   .retrieve().bodyToMono(Integer.class).block();
+            return WebClient.create().get().uri("http://" + READ_SERVER_NAME + "_" + id + ":" + IMAGE_INTERNAL_PORT + "/load").
+                    header("x-api-key", CONTROLLER_API_KEY)
+                    .retrieve().bodyToMono(Integer.class).block();
         } catch (WebClientException e) {
             return Integer.MAX_VALUE;
         }
@@ -154,6 +150,7 @@ public class ReadServerNode implements Observer {
     public int getPort() {
         return port;
     }
+
     public int getId() {
         return id;
     }
