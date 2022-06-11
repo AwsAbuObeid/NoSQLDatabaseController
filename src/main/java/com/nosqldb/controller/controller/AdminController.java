@@ -123,7 +123,7 @@ public class AdminController {
             case "Stop Node":
                 readServersManager.stopNode(Integer.parseInt(allRequestParams.get("stoppedNode")));
                 break;
-            case "ShutDown Server":
+            case "ShutDown Database":
                 readServersManager.stopAllNodes();
                 logger.info("Server Shutting Down...");
                 System.exit(0);

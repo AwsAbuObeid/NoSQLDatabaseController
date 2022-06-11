@@ -13,7 +13,7 @@
 
 <body class="container-fluid px-4 py-4">
 <h1 class="text-center mb-4">NoSqlDB Config</h1>
-<form method="post" class="position-absolute top-0 end-0 px-2 py-2"> <input name="execute" type="submit" value="ShutDown Server" class="btn btn-danger" /> </form>
+<form method="post" class="position-absolute top-0 end-0 px-2 py-2"> <input name="execute" type="submit" value="ShutDown Database" class="btn btn-danger" /> </form>
    <hr class="divider mb-4">
 
     <div class="row mb-4"">
