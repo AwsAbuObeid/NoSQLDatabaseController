@@ -39,6 +39,7 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
+                 System.out.println("sending request to "+"http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/write");
             String resp=WebClient.create().post().uri("http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
@@ -138,6 +139,7 @@ public class ReadServerNode implements Observer {
 
     public int getLoad() {
         try {
+            System.out.println("sending request to "+"http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/load");
             return WebClient.create().get().uri("http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/load").
                    header("x-api-key", CONTROLLER_API_KEY)
                    .retrieve().bodyToMono(Integer.class).block();
