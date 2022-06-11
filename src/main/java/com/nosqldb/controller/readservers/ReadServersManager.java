@@ -99,7 +99,7 @@ public class ReadServersManager {
             if (node.getLoad()<minLoad)
                 minID=node.getId();
         }
-        return readServerNodes.get(minID);
+        return readServerNodes.get(minID-1);
     }
 
     public void stopNode(int id) {
