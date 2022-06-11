@@ -39,7 +39,7 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
-            String resp=WebClient.create().post().uri(DB_URL + ":" + port + "/write").
+            String resp=WebClient.create().post().uri(READ_SERVER_NAME+"_"+id + ":" + port + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -125,7 +125,7 @@ public class ReadServerNode implements Observer {
 
     public boolean sendSession(ObjectNode message) {
         try {
-            String response = WebClient.create().post().uri(DB_URL + ":" + port + "/addAPIKey").
+            String response = WebClient.create().post().uri(READ_SERVER_NAME+"_"+id + ":" + port + "/addAPIKey").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -138,7 +138,7 @@ public class ReadServerNode implements Observer {
 
     public int getLoad() {
         try {
-            return WebClient.create().get().uri(DB_URL + ":" + port + "/load").
+            return WebClient.create().get().uri(READ_SERVER_NAME+"_"+id + ":" + port + "/load").
                    header("x-api-key", CONTROLLER_API_KEY)
                    .retrieve().bodyToMono(Integer.class).block();
         } catch (WebClientException e) {
