@@ -1,9 +1,7 @@
 package com.nosqldb.controller.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.nosqldb.controller.readservers.ReadServersManager;
 import com.nosqldb.controller.security.DBUser;
 import com.nosqldb.controller.DAO.ControllerDao;
 import com.nosqldb.controller.writeuUtils.WriteHandler;
@@ -18,9 +16,6 @@ import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
-import java.util.UUID;
-
-import static com.nosqldb.controller.readservers.Constants.HOST_URL;
 
 
 /**

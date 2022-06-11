@@ -1,11 +1,9 @@
 package com.nosqldb.controller.readservers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.nosqldb.controller.readservers.observer.Observer;
 import com.nosqldb.controller.readservers.observer.ReadServerNode;
 import com.nosqldb.controller.readservers.observer.ReadServerSubject;
 import com.nosqldb.controller.readservers.observer.Subject;
-import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -13,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.nosqldb.controller.readservers.Constants.*;
+import static com.nosqldb.controller.Constants.*;
 
 /**
  * The ReadServersManager class is responsible for managing the nodes in the cluster,

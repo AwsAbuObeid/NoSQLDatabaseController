@@ -18,8 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-import static com.nosqldb.controller.readservers.Constants.HOST_URL;
-
 @RestController
 @RequestMapping("/read")
 public class UserReadController {

@@ -4,7 +4,7 @@ import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.boot.web.servlet.server.ConfigurableServletWebServerFactory;
 import org.springframework.context.annotation.Configuration;
 
-import static com.nosqldb.controller.readservers.Constants.CONTROLLER_PORT;
+import static com.nosqldb.controller.Constants.CONTROLLER_PORT;
 
 @Configuration
 public class PortConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {

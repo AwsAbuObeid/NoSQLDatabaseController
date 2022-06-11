@@ -14,7 +14,7 @@ import org.springframework.web.reactive.function.client.WebClientException;
 
 import java.io.IOException;
 
-import static com.nosqldb.controller.readservers.Constants.*;
+import static com.nosqldb.controller.Constants.*;
 
 /**
  * ReadServerNode class represents an object holding all the references to a Node in
