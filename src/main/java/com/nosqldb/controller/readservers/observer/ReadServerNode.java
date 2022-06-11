@@ -39,8 +39,7 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
-            System.out.println("sending request to "+"http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/load");
-            String resp=WebClient.create().post().uri("http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/write").
+            String resp=WebClient.create().post().uri(DB_URL + ":" + port + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -126,7 +125,7 @@ public class ReadServerNode implements Observer {
 
     public boolean sendSession(ObjectNode message) {
         try {
-            WebClient.create().post().uri("http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/addAPIKey").
+            String response = WebClient.create().post().uri(DB_URL + ":" + port + "/addAPIKey").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -139,8 +138,12 @@ public class ReadServerNode implements Observer {
 
     public int getLoad() {
         try {
-            System.out.println("sending request to "+"http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/load");
-            return WebClient.create().get().uri("http://"+READ_SERVER_NAME+"_"+id + ":" + IMAGE_INTERNAL_PORT + "/load").
+            System.out.println(DB_URL + ":" + port + "/load");
+
+            System.out.println(WebClient.create().get().uri(DB_URL + ":" + "1111" + "/shit")
+                    .retrieve().bodyToMono(Integer.class).block());
+
+            return WebClient.create().get().uri(DB_URL + ":" + port + "/load").
                    header("x-api-key", CONTROLLER_API_KEY)
                    .retrieve().bodyToMono(Integer.class).block();
         } catch (WebClientException e) {
