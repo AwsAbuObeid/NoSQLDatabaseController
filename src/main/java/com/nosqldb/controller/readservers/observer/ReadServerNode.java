@@ -39,7 +39,7 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
-            String resp=WebClient.create().post().uri(DB_URL + ":" + port + "/write").
+            String resp=WebClient.create().post().uri(HOST_URL + ":" + port + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -68,7 +68,7 @@ public class ReadServerNode implements Observer {
                 "    }" +
                 "  }" +
                 "}";
-        String url = DB_URL + ":" + DOCKER_API_PORT +
+        String url = HOST_URL + ":" + DOCKER_API_PORT +
                 "/containers/create?name=" + READ_SERVER_NAME + "_" + id;
 
         try {
@@ -81,7 +81,7 @@ public class ReadServerNode implements Observer {
                 return false;
             containerId = resp.get("Id").asText();
 
-            url = DB_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/start";
+            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/start";
             WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
                     .retrieve().bodyToMono(String.class).block();
@@ -96,7 +96,7 @@ public class ReadServerNode implements Observer {
 
     public boolean commitContainer() {
         try {
-            String url = DB_URL + ":" + DOCKER_API_PORT +
+            String url = HOST_URL + ":" + DOCKER_API_PORT +
                     "/commit?container=" + READ_SERVER_NAME + "_" + id + "&repo=" + IMAGE_TAG;
             String response = WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
@@ -111,11 +111,11 @@ public class ReadServerNode implements Observer {
 
     public boolean stopContainer() {
         try {
-            String url = DB_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/stop";
+            String url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/stop";
             WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
                     .retrieve().bodyToMono(String.class).block();
-            url = DB_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id;
+            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id;
             WebClient.create().delete().uri(url)
                     .retrieve().bodyToMono(String.class).block();
             return true;
@@ -126,7 +126,7 @@ public class ReadServerNode implements Observer {
 
     public boolean sendSession(ObjectNode message) {
         try {
-            String response = WebClient.create().post().uri(DB_URL + ":" + port + "/addAPIKey").
+            String response = WebClient.create().post().uri(HOST_URL + ":" + port + "/addAPIKey").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
@@ -139,7 +139,7 @@ public class ReadServerNode implements Observer {
 
     public int getLoad() {
         try {
-            return WebClient.create().get().uri(DB_URL + ":" + port + "/load").
+            return WebClient.create().get().uri(HOST_URL + ":" + port + "/load").
                    header("x-api-key", CONTROLLER_API_KEY)
                    .retrieve().bodyToMono(Integer.class).block();
         } catch (WebClientException e) {

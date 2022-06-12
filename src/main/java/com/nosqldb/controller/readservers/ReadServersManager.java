@@ -108,8 +108,8 @@ public class ReadServersManager {
             logger.error("Failed to send User to server at port: "+readeNode.getPort() +"");
             return null;
         }
-        logger.info("User was Sent to : "+HOST_URL+":"+readeNode.getPort());
-        return HOST_URL+":"+readeNode.getPort();
+        logger.info("User was Sent to : "+DB_URL+":"+readeNode.getPort());
+        return DB_URL+":"+readeNode.getPort();
     }
 
     private ReadServerNode chooseNode(){
