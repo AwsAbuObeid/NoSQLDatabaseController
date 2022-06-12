@@ -10,11 +10,11 @@ public class Constants {
     public static final int IMAGE_INTERNAL_PORT=5050;
     public static final int READ_SERVER_STARTING_PORT=8081;
     public static final String IMAGE_TAG="awssaleh/nosql-read-server";
-    //public static final String DB_URL="http://host.docker.internal";
+    public static final String DB_URL="http://host.docker.internal";
     public static final String CONTROLLER_API_KEY="Controller_API_key";
     public static final String READ_SERVER_NAME="read_server";
     public static final String HOST_URL="http://localhost";
-    public static final String DB_URL="http://localhost";
+    //public static final String DB_URL="http://localhost";
 
 
 
