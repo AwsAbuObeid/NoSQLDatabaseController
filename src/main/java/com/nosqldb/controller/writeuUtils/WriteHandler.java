@@ -25,7 +25,10 @@ public class WriteHandler {
     @Autowired
     private ReadServersManager readServersManager;
     @Autowired
-    private JsonSchemaVaildator validator;
+    JsonSchemaVaildator validator;
+    @Autowired
+    JsonSchemaApplicator applicator;
+
     private final ObjectMapper mapper;
 
     public WriteHandler() {
@@ -41,14 +44,16 @@ public class WriteHandler {
         JsonNode schema=dao.getDatabaseSchema(DB).get(collection);
         String schemaStatus= validator.validateDocument(document,schema);
         if (schemaStatus.equals("OK")) {
-            validator.applySchema(document, schema);
+            applicator.applySchema(document, schema);
 
             ObjectNode message= mapper.createObjectNode();
             message.put("op",Operation.ADD_DOCUMENT.name());
             message.put("DB",DB);
             message.put("collection",collection);
             message.set("document",document);
-            readServersManager.updateReadServers(message);
+
+            if(!readServersManager.updateReadServers(message))
+                return "CANNOT SAVE DATA";
             return "OK";
         } return schemaStatus;
     }
@@ -65,15 +70,16 @@ public class WriteHandler {
         addId(schema);
         ObjectNode databaseSchema=dao.getDatabaseSchema(DB);
         databaseSchema.set(collection,schema);
-        dao.setDatabaseSchema(DB,databaseSchema);
 
         ObjectNode message= mapper.createObjectNode();
         message.put("op",Operation.ADD_COLLECTION.name());
         message.put("DB",DB);
         message.put("collection",collection);
         message.set("schema",schema);
-        readServersManager.updateReadServers(message);
 
+        if(readServersManager.updateReadServers(message))
+            dao.setDatabaseSchema(DB,databaseSchema);
+        else return "CANNOT SAVE DATA";
         return "OK";
     }
 
@@ -86,14 +92,17 @@ public class WriteHandler {
 
         ObjectNode databaseSchema=dao.getDatabaseSchema(DB);
         databaseSchema.remove(collection);
-        dao.setDatabaseSchema(DB,databaseSchema);
 
         ObjectNode message= mapper.createObjectNode();
         message.put("op",Operation.DELETE_COLLECTION.name());
         message.put("DB",DB                     );
         message.put("collection",collection);
-        readServersManager.updateReadServers(message);
+
+        if(readServersManager.updateReadServers(message))
+            dao.setDatabaseSchema(DB,databaseSchema);
+        else return "CANNOT SAVE DATA";
         return "OK";
+
     }
 
     /**
@@ -108,7 +117,9 @@ public class WriteHandler {
         message.put("DB",DB);
         message.put("collection",collection);
         message.put("doc_ID",doc_ID);
-        readServersManager.updateReadServers(message);
+
+        if(!readServersManager.updateReadServers(message))
+            return "CANNOT SAVE DATA";
         return "OK";
     }
 
@@ -131,7 +142,6 @@ public class WriteHandler {
             return "Attribute " + collection + " already Exists!";
 
         ((ObjectNode)databaseSchema.get(collection).get("properties")).set(attribName,attribute);
-        dao.setDatabaseSchema(DB,databaseSchema);
 
         ObjectNode message= mapper.createObjectNode();
         message.put("op",Operation.ADD_ATTRIBUTE.name());
@@ -139,8 +149,10 @@ public class WriteHandler {
         message.put("collection",collection);
         message.put("attribName",attribName);
         message.set("attribute",attribute);
-        readServersManager.updateReadServers(message);
 
+        if(readServersManager.updateReadServers(message))
+            dao.setDatabaseSchema(DB,databaseSchema);
+        else return "CANNOT SAVE DATA";
         return "OK";
     }
 
@@ -157,14 +169,15 @@ public class WriteHandler {
             return "Attribute " + attribName + " doesnt Exist!";
 
         ((ObjectNode)databaseSchema.get(collection).get("properties")).remove(attribName);
-        dao.setDatabaseSchema(DB,databaseSchema);
 
         ObjectNode message= mapper.createObjectNode();
         message.put("op",Operation.SET_SCHEMA.name());
         message.put("DB",DB);
-        message.put("schema",databaseSchema);
-        readServersManager.updateReadServers(message);
+        message.set("schema",databaseSchema);
 
+        if(readServersManager.updateReadServers(message))
+            dao.setDatabaseSchema(DB,databaseSchema);
+        else return "CANNOT SAVE DATA";
         return "OK";
     }
 }

@@ -20,10 +20,13 @@ import static com.nosqldb.controller.Constants.*;
  */
 @Component
 public class ReadServersManager {
+
     private int idCount;
     private int count;
     private final Subject subject;
     private final ArrayList<ReadServerNode> readServerNodes;
+
+
     private final Logger logger= LoggerFactory.getLogger(ReadServersManager.class);
 
 
@@ -35,27 +38,8 @@ public class ReadServersManager {
         createNewReadNode(READ_SERVER_STARTING_PORT);
     }
 
-    /**
-     * Commits one container and creates a new one, if it failed to commit, it
-     * will not create a new node.
-     */
     public void createNewReadNode(int port) {
         ReadServerNode newNode;
-
-        if(readServerNodes.size()!=0) {
-            ReadServerNode clean=null;
-            for(ReadServerNode node :readServerNodes) {
-                if(!node.isDirty()) {
-                    clean=node;
-                    break;
-                }
-            }
-            if (clean==null||!clean.commitContainer()) {
-                logger.error("No container was committed.");
-                logger.error("This is a critical error, newly created Nodes could have dirty data!");
-                return;
-            }
-        }
         newNode=new ReadServerNode(idCount+1,port);
         if (!newNode.runContainer()) {
             logger.error("failed to run container at port "+port);
@@ -72,9 +56,43 @@ public class ReadServersManager {
         return readServerNodes;
     }
 
-    public void updateReadServers(ObjectNode message){
+    /**
+     * First it sends the message to the servers, then checks if any are didn't update,
+     * if so it attempts to fix it, else it deletes it, if none updated, it returns false.
+     * returns true if everything is ok.
+     */
+    public synchronized boolean updateReadServers(ObjectNode message){
         logger.info("Sending update to "+count+" nodes in the cluster");
         subject.notifyObservers(message);
+
+        if(!commitContainer()) {
+            logger.error("No container was committed."                                                  );
+            logger.error("This is a critical error, newly created Nodes could have dirty data!"         );
+            logger.error("Recommend restarting Database, and running more servers for data redundancy"  );
+            for(ReadServerNode node :readServerNodes)
+                node.cleanNode();
+            return false;
+        }
+        for(ReadServerNode node :readServerNodes)
+            if (node.isDirty()) {
+                logger.info("attempting to fix read server id : "+node.getId()+" -restarting...");
+                node.stopContainer();
+                if(!node.runContainer()) {
+                    logger.error("failed to restart stopping server id : "+node.getId());
+                    stopNode(node.getId());
+                }else node.cleanNode();
+            }
+        return true;
+    }
+    private boolean commitContainer(){
+        boolean committed=false;
+        for(ReadServerNode node :readServerNodes)
+            if(!node.isDirty()&& node.commitContainer()) {
+                logger.info("committed read_server_"+node.getId());
+                committed=true;
+                break;
+            }
+        return committed;
     }
 
     /**
@@ -90,14 +108,13 @@ public class ReadServersManager {
             logger.error("Failed to send User to server at port: "+readeNode.getPort() +"");
             return null;
         }
-
         logger.info("User was Sent to : "+HOST_URL+":"+readeNode.getPort());
         return HOST_URL+":"+readeNode.getPort();
     }
 
     private ReadServerNode chooseNode(){
         int minLoad=readServerNodes.get(0).getLoad();
-        ReadServerNode minNode=null;
+        ReadServerNode minNode=readServerNodes.get(0);
         for(ReadServerNode node :readServerNodes) {
             if (node.getLoad()<minLoad)
                 minNode=node;
@@ -115,7 +132,8 @@ public class ReadServersManager {
     public void stopNode(int id) {
         ReadServerNode stopped=getNodeById(id);
         if (!stopped.stopContainer()){
-            logger.error("Failed to stop server with ID: "+id);
+            logger.error("Failed to stop Container with ID: "+id);
+            logger.error("Deleting from the List,  "+id);
             return;
         }
         subject.removeObserver(stopped);

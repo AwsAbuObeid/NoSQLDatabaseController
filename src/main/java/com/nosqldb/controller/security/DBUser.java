@@ -17,14 +17,6 @@ public class DBUser implements UserDetails {
     private String username;
     private String password;
 
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authority=new ArrayList<>();
-        authority.add((GrantedAuthority) () -> "ROLE_USER");
-        return authority;
-    }
-
     @Override
     public String getPassword() {
         return password;
@@ -54,6 +46,36 @@ public class DBUser implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
+
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        List<GrantedAuthority> authority=new ArrayList<>();
+        authority.add((GrantedAuthority) () -> "ROLE_USER");
+        return authority;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof DBUser)) {
+            return false;
+        }
+        DBUser user=(DBUser)o;
+        return user.getUsername().equals(getUsername()) &&
+                user.getDatabase().equals(getDatabase());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = 17;
+            result = 31 * result + database.hashCode();
+            result = 31 * result + username.hashCode();
+        return result;
+    }
+
 
 
 }

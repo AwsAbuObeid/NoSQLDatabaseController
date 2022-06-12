@@ -85,11 +85,13 @@ public class AdminController {
                         dao.deleteUser(deleted);
                         inMemManager.deleteUser(u.getUsername());
                     }
-                dao.deleteDatabase(deleted);
+
                 ObjectNode message=mapper.createObjectNode();
                 message.put("DB",deleted);
                 message.put("op", Operation.DELETE_DATABASE.name());
-                readServersManager.updateReadServers(message);
+                if(!readServersManager.updateReadServers(message))
+                    break;
+                dao.deleteDatabase(deleted);
                 logger.info("Deleted database "+allRequestParams.get("deletedDB"));
                 break;
 
@@ -110,7 +112,6 @@ public class AdminController {
                 String dbname=allRequestParams.get("DatabaseName");
                 if(!dao.databaseExists(dbname)){
                     createNewDB(dbname);
-                    logger.info(dbname+" Database Created");
                 }
                 else model.put("badDB","Database already exists!");
                 break;
@@ -141,11 +142,13 @@ public class AdminController {
     }
 
     private void createNewDB(String db) throws IOException {
-        dao.setDatabaseSchema(db,mapper.createObjectNode());
         ObjectNode message=mapper.createObjectNode();
         message.put("DB",db);
         message.put("op",Operation.SET_SCHEMA.name());
         message.set("schema",mapper.createObjectNode());
-        readServersManager.updateReadServers(message);
+        if(!readServersManager.updateReadServers(message))
+            return;
+        dao.setDatabaseSchema(db,mapper.createObjectNode());
+        logger.info(db+" Database Created");
     }
 }

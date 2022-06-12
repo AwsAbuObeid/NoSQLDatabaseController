@@ -80,7 +80,7 @@
                         <th>Node ID</th>
                         <th>Port Number</th>
                         <th>load</th>
-                        <th>Dirty</th>
+                        <th>Availability</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -91,7 +91,7 @@
                                 <td >${item.id}</td>
                                 <td >${item.port}</td>
                                 <td >${item.load}</td>
-                                <td >${item.dirty}</td>
+                                <td >${item.status}</td>
                                 <form  method="POST">
                                 <td><input name="execute" type="submit" value="Stop Node" class="btn btn-danger" /></td>
                                 <input type="hidden" name="stoppedNode" value=${item.id} />

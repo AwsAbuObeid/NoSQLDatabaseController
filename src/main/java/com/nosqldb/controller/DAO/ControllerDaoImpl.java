@@ -26,10 +26,10 @@ public class ControllerDaoImpl implements ControllerDao {
 
     private final ObjectMapper mapper;
 
-    public ControllerDaoImpl() {
+    private ControllerDaoImpl() {
         this.mapper = new ObjectMapper();
     }
-
+    @Override
     public List<DBUser> getUsers(){
         try {
             ArrayNode users = (ArrayNode) mapper.readTree(files.getUsersFile());
@@ -41,8 +41,8 @@ public class ControllerDaoImpl implements ControllerDao {
             return new ArrayList<>();
         }
     }
-
-    public void addUser(DBUser user) throws IOException {
+    @Override
+    public synchronized void addUser(DBUser user) throws IOException {
         ObjectNode node = mapper.createObjectNode();
         node.put("database", user.getDatabase());
         node.put("username", user.getUsername());
@@ -53,8 +53,8 @@ public class ControllerDaoImpl implements ControllerDao {
         users.add(node);
         mapper.writeValue(usersFile, users);
     }
-
-    public void deleteUser(String username) throws IOException {
+    @Override
+    public synchronized void deleteUser(String username) throws IOException {
         File usersFile=files.getUsersFile();
         ArrayNode users = (ArrayNode) mapper.readTree(usersFile);
         for (int i = 0; i < users.size(); i++)
@@ -63,6 +63,7 @@ public class ControllerDaoImpl implements ControllerDao {
         mapper.writeValue(usersFile, users);
 
     }
+    @Override
     public ObjectNode getDatabaseSchema(String DB) throws IOException {
         JsonNode schema = mapper.readTree(files.getDatabaseSchemaFile(DB));
         return (ObjectNode) schema;
@@ -83,12 +84,12 @@ public class ControllerDaoImpl implements ControllerDao {
     }
 
     @Override
-    public boolean deleteDatabase(String DB) {
+    public synchronized boolean deleteDatabase(String DB) {
         return files.getDatabaseSchemaFile(DB).delete();
     }
 
     @Override
-    public void setDatabaseSchema(String DB,JsonNode schema) throws IOException {
+    public  synchronized void setDatabaseSchema(String DB,JsonNode schema) throws IOException {
         mapper.writeValue(files.getDatabaseSchemaFile(DB),schema);
     }
 

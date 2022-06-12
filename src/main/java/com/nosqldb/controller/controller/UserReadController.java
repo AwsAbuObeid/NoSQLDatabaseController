@@ -7,6 +7,7 @@ import com.nosqldb.controller.readservers.ReadServersManager;
 import com.nosqldb.controller.security.DBUser;
 import com.nosqldb.controller.writeuUtils.WriteHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

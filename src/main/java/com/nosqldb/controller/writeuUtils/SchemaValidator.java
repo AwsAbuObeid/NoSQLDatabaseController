@@ -10,12 +10,12 @@ import java.util.UUID;
 import java.util.Iterator;
 
 /**
- * The SchemaValidator class implements JsonSchemaVaildator,
- * it checks if the collection schema is valid.
+ * The SchemaValidator class implements JsonSchemaVaildator, and
+ * JsonSchemaApplicator, it checks if the collection schema is valid.
  * it also checks if a document fits into the schema.
  */
 @Service
-public class SchemaValidator implements JsonSchemaVaildator {
+public class SchemaValidator implements JsonSchemaVaildator,JsonSchemaApplicator {
 
     @Override
     public boolean isValidSchema(JsonNode schema) {

@@ -7,6 +7,4 @@ public interface JsonSchemaVaildator {
     String validateDocument(JsonNode schema, JsonNode document);
 
     boolean isValidSchema(JsonNode schema);
-
-    void applySchema(JsonNode document, JsonNode schema);
 }

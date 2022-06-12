@@ -52,6 +52,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
 		return manager;
 	}
+
 	@Bean
 	PasswordEncoder passwordEncoder() {
 		//TODO change

@@ -157,4 +157,13 @@ public class ReadServerNode implements Observer {
     public boolean isDirty() {
         return dirty;
     }
+
+    public void cleanNode() {
+        dirty=false;
+    }
+    public String getStatus(){
+        if(getLoad()==Integer.MAX_VALUE)
+            return "Not Available";
+        return "Available";
+    }
 }
