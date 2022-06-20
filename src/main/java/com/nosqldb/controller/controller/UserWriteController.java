@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 @RestController
 @RequestMapping("/write")
-@SessionAttributes("{username,database,role}")
+@SessionAttributes("{database,role}")
 public class UserWriteController {
 
     @Autowired
@@ -48,7 +48,6 @@ public class UserWriteController {
                 DBName = i.getDatabase();
                 role = i.getRole();
             }
-        model.put("username", username);
         model.put("database", DBName);
         model.put("role", role);
     }
@@ -58,20 +57,19 @@ public class UserWriteController {
         getUserInfo(model);
 
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode ret;
         try {
-            status = writeHandler.addDocument(DBName, colName, document);
+            ret = writeHandler.addDocument(DBName, colName, document);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
-            return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        if (ret.has("_id"))
+            return new ResponseEntity(ret.get("_id").asText(),HttpStatus.OK);
+        return new ResponseEntity(ret.get("error").asText(), HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(value = "/{colName}/{docId}", method = RequestMethod.DELETE)
@@ -79,20 +77,19 @@ public class UserWriteController {
         getUserInfo(model);
 
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode status;
         try {
             status = writeHandler.deleteDocument(DBName, colName, docId);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
+        if (status.has("status"))
             return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(status.get("error").asText(), HttpStatus.BAD_REQUEST);
 
     }
 
@@ -101,20 +98,19 @@ public class UserWriteController {
         getUserInfo(model);
 
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode status;
         try {
             status = writeHandler.addCollection(DBName, colName, schema);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
+        if (status.has("status"))
             return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(status.get("error").asText(), HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(value = "/schema/{colName}", method = RequestMethod.DELETE)
@@ -122,67 +118,64 @@ public class UserWriteController {
         getUserInfo(model);
 
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode status;
         try {
             status = writeHandler.deleteCollection(DBName, colName);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
+        if (status.has("status"))
             return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(status.get("error").asText(), HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(value = "/schema/{colName}/{attribName}", method = RequestMethod.PUT)
-    public ResponseEntity addAttribute(@PathVariable String colName,
-                                       @PathVariable String attribName,
-                                       @RequestBody ObjectNode attribute,
-                                       ModelMap model
-    ) {
+    public ResponseEntity addAttribute( @PathVariable String colName,
+                                        @PathVariable String attribName,
+                                        @RequestBody ObjectNode attribute,
+                                        ModelMap model
+                                        ) {
         getUserInfo(model);
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode status;
         try {
             status = writeHandler.addAttribute(DBName, colName, attribName, attribute);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
+        if (status.has("status"))
             return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(status.get("error").asText(), HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(value = "/schema/{colName}/{attribName}", method = RequestMethod.DELETE)
-    public ResponseEntity deleteAttribute(@PathVariable String colName,
-                                          @PathVariable String attribName,
-                                          ModelMap model
-    ) {
+    public ResponseEntity deleteAttribute(  @PathVariable String colName,
+                                            @PathVariable String attribName,
+                                            ModelMap model
+                                            ) {
         getUserInfo(model);
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
         String role = (String) model.getAttribute("role");
         if (!"ADMIN".equals(role))
             return new ResponseEntity(HttpStatus.UNAUTHORIZED);
 
-        String status;
+        ObjectNode status;
         try {
             status = writeHandler.deleteAttribute(DBName, colName, attribName);
         } catch (IOException e) {
             return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        if (status.equals("OK"))
+        if (status.has("status"))
             return new ResponseEntity(HttpStatus.OK);
-        return new ResponseEntity(status, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity(status.get("error").asText(), HttpStatus.BAD_REQUEST);
     }
 
     @RequestMapping(name = "/getSchema", method = RequestMethod.GET)
@@ -190,9 +183,7 @@ public class UserWriteController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         getUserInfo(model);
-
         String DBName = (String) model.getAttribute("database");
-        String username = (String) model.getAttribute("username");
 
         JsonNode ret;
         try {
@@ -200,7 +191,6 @@ public class UserWriteController {
         } catch (IOException e) {
             return new ResponseEntity(headers, HttpStatus.INTERNAL_SERVER_ERROR);
         }
-
         return new ResponseEntity(ret, headers, HttpStatus.OK);
     }
 

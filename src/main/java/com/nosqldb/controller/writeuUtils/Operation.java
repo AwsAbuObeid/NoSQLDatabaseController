@@ -5,6 +5,6 @@ package com.nosqldb.controller.writeuUtils;
  * from the Main database controller.
  */
 public enum Operation {
-    ADD_DOCUMENT, DELETE_DOCUMENT, DELETE_COLLECTION, SET_SCHEMA,
-    DELETE_DATABASE, ADD_ATTRIBUTE, ADD_COLLECTION
+    ADD_DOCUMENT, DELETE_DOCUMENT, DELETE_COLLECTION,
+    SET_SCHEMA, DELETE_DATABASE, ADD_ATTRIBUTE, ADD_COLLECTION
 }

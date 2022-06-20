@@ -24,14 +24,17 @@ import static com.nosqldb.controller.Constants.*;
  * design pattern.
  */
 public class ReadServerNode implements Observer {
-    private final int id;
+
     private String containerId;
-    private final int port;
     private boolean dirty;
-    private final Logger logger= LoggerFactory.getLogger(ReadServersManager.class);
+    private final int port;
+    private final int id;
+    private final String name;
+    private final Logger logger = LoggerFactory.getLogger(ReadServersManager.class);
 
     public ReadServerNode(int id, int port) {
-        dirty=false;
+        name = READ_SERVER_NAME + "_" + id;
+        dirty = false;
         this.id = id;
         this.port = port;
     }
@@ -39,65 +42,57 @@ public class ReadServerNode implements Observer {
     @Override
     public void update(ObjectNode message) {
         try {
-            String resp=WebClient.create().post().uri(HOST_URL + ":" + port + "/write").
+            String resp = WebClient.create().post().uri(HOST_URL + ":" + port + "/write").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
                     .retrieve().bodyToMono(String.class).block();
-            if(!"OK".equals(resp))
+            if (!"OK".equals(resp))
                 throw new Exception("Bad response");
         } catch (Exception e) {
             logger.error("server with ID : " +
-                    id + " at port: " + port + " Failed to update with Error: "+e.getMessage());
-            dirty=true;
+                    id + " at port: " + port + " Failed to update with Error: " + e.getMessage());
+            dirty = true;
         }
     }
 
     public boolean runContainer() {
         String s = "{" +
-                "  \"ExposedPorts\": { \"" + IMAGE_INTERNAL_PORT + "/tcp\": {} }," +
-                "  \"Image\": \"" + IMAGE_TAG + "\"," +
-                "  \"HostConfig\": {" +
-                "    \"PortBindings\": {" +
-                "      \"" + IMAGE_INTERNAL_PORT + "/tcp\": [" +
-                "        {\n" +
-                "          \"HostIp\": \"\"," +
-                "          \"HostPort\": \"" + port + "\"" +
-                "        }" +
-                "      ]" +
-                "    }" +
-                "  }" +
-                "}";
+                "\"ExposedPorts\": { \"" + IMAGE_INTERNAL_PORT + "/tcp\": {} }," +
+                "\"Image\": \"" + IMAGE_TAG + "\"," +
+                "\"HostConfig\": {" +
+                "  \"PortBindings\": {" +
+                "    \"" + IMAGE_INTERNAL_PORT + "/tcp\": [" +
+                "      {" +
+                "        \"HostIp\": \"\"," +
+                "        \"HostPort\": \"" + port + "\"" +
+                "}]}}}";
         String url = HOST_URL + ":" + DOCKER_API_PORT +
-                "/containers/create?name=" + READ_SERVER_NAME + "_" + id;
+                "/containers/create?name=" + name;
 
         try {
             String response = WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(s))
                     .retrieve().bodyToMono(String.class).block();
             JsonNode resp = new JsonMapper().readTree(response);
-
             if (!resp.has("Id"))
                 return false;
             containerId = resp.get("Id").asText();
 
-            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/start";
+            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + name + "/start";
             WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
                     .retrieve().bodyToMono(String.class).block();
             return true;
         } catch (WebClientException | IOException e) {
-            logger.error("Container failed to start with error :" +e.getMessage());
+            logger.error("Container failed to start with error :" + e.getMessage());
             return false;
         }
-
-
     }
 
     public boolean commitContainer() {
         try {
-            String url = HOST_URL + ":" + DOCKER_API_PORT +
-                    "/commit?container=" + READ_SERVER_NAME + "_" + id + "&repo=" + IMAGE_TAG;
+            String url = HOST_URL + ":" + DOCKER_API_PORT +"/commit?container=" + name + "&repo=" + IMAGE_TAG;
             String response = WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
                     .retrieve().bodyToMono(String.class).block();
@@ -106,16 +101,15 @@ public class ReadServerNode implements Observer {
         } catch (WebClientException | IOException e) {
             return false;
         }
-
     }
 
     public boolean stopContainer() {
         try {
-            String url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id + "/stop";
+            String url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + name + "/stop";
             WebClient.create().post().uri(url).contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(""))
                     .retrieve().bodyToMono(String.class).block();
-            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + READ_SERVER_NAME + "_" + id;
+            url = HOST_URL + ":" + DOCKER_API_PORT + "/containers/" + name;
             WebClient.create().delete().uri(url)
                     .retrieve().bodyToMono(String.class).block();
             return true;
@@ -126,13 +120,13 @@ public class ReadServerNode implements Observer {
 
     public boolean sendSession(ObjectNode message) {
         try {
-            String response = WebClient.create().post().uri(HOST_URL + ":" + port + "/addAPIKey").
+            WebClient.create().post().uri(HOST_URL + ":" + port + "/addAPIKey").
                     header("x-api-key", CONTROLLER_API_KEY).
                     contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(new JsonMapper().writeValueAsString(message)))
                     .retrieve().bodyToMono(String.class).block();
             return true;
-        } catch (WebClientException |IOException e) {
+        } catch (WebClientException | IOException e) {
             return false;
         }
     }
@@ -140,29 +134,23 @@ public class ReadServerNode implements Observer {
     public int getLoad() {
         try {
             return WebClient.create().get().uri(HOST_URL + ":" + port + "/load").
-                   header("x-api-key", CONTROLLER_API_KEY)
-                   .retrieve().bodyToMono(Integer.class).block();
+                    header("x-api-key", CONTROLLER_API_KEY)
+                    .retrieve().bodyToMono(Integer.class).block();
         } catch (WebClientException e) {
             return Integer.MAX_VALUE;
         }
     }
 
-    public int getPort() {
-        return port;
-    }
-    public int getId() {
-        return id;
-    }
+    public int getPort() { return port; }
 
-    public boolean isDirty() {
-        return dirty;
-    }
+    public int getId() { return id; }
 
-    public void cleanNode() {
-        dirty=false;
-    }
-    public String getStatus(){
-        if(getLoad()==Integer.MAX_VALUE)
+    public boolean isDirty() { return dirty; }
+
+    public void cleanNode() { dirty = false; }
+
+    public String getStatus() {
+        if (getLoad() == Integer.MAX_VALUE)
             return "Not Available";
         return "Available";
     }

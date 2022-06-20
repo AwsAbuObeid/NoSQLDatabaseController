@@ -8,7 +8,7 @@ import static com.nosqldb.controller.Constants.CONTROLLER_PORT;
 
 @Configuration
 public class PortConfig implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory> {
-  public void customize(ConfigurableServletWebServerFactory factory){
-    factory.setPort(CONTROLLER_PORT);
-  }
+    public void customize(ConfigurableServletWebServerFactory factory) {
+        factory.setPort(CONTROLLER_PORT);
+    }
 }

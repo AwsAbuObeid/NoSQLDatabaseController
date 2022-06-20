@@ -55,71 +55,27 @@ public class AdminController {
         String action=allRequestParams.get("execute");
         switch (action) {
             case "Add User":
-                DBUser user = new DBUser();
-                user.setUsername(allRequestParams.get("username"));
-                user.setDatabase(allRequestParams.get("database"));
-                user.setPassword(allRequestParams.get("password"));
-                user.setRole(allRequestParams.get("role"));
-                if(!inMemManager.userExists(user.getUsername())&&
-                        dao.databaseExists(allRequestParams.get("database"))){
-                    dao.addUser(user);
-                    inMemManager.createUser(user);
-                    model.put("good", "User Created!");
-                    logger.info("Added new user");
-                    break;
-                }
-                model.put("bad", "Creation Failed");
+                addUser(model,allRequestParams.get("username")
+                        ,allRequestParams.get("database")
+                        ,allRequestParams.get("password")
+                        ,allRequestParams.get("role"));
                 break;
-
             case "Delete User":
-                dao.deleteUser(allRequestParams.get("deletedUser"));
-                inMemManager.deleteUser(allRequestParams.get("deletedUser"));
-                logger.info("Deleted user "+allRequestParams.get("deletedUser"));
+                deleteUser(allRequestParams.get("deletedUser"));
                 break;
-
             case "Delete Database":
-                String deleted=allRequestParams.get("deletedDB");
-                List<DBUser> users=dao.getUsers();
-                for (DBUser u :users)
-                    if(u.getDatabase().equals(deleted)) {
-                        dao.deleteUser(deleted);
-                        inMemManager.deleteUser(u.getUsername());
-                    }
-
-                ObjectNode message=mapper.createObjectNode();
-                message.put("DB",deleted);
-                message.put("op", Operation.DELETE_DATABASE.name());
-                if(!readServersManager.updateReadServers(message))
-                    break;
-                dao.deleteDatabase(deleted);
-                logger.info("Deleted database "+allRequestParams.get("deletedDB"));
+                deleteDatabase(allRequestParams.get("deletedDB"));
                 break;
-
             case "Change MasterAdmin Credentials":
                 return "changeAdmin";
-
             case "Set Admin Credentials":
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                inMemManager.deleteUser(auth.getName());
-                HashSet<GrantedAuthority> x = new HashSet<>();
-                x.add((GrantedAuthority) () -> "ROLE_ADMIN");
-                UserDetails MasterAdmin = new User(allRequestParams.get("username"),
-                        allRequestParams.get("password"), x);
-                inMemManager.createUser(MasterAdmin);
-                logger.info("Admin Credentials changed");
+                changeAdmin(allRequestParams.get("username"),allRequestParams.get("password"));
                 break;
             case "Create New Database":
-                String dbname=allRequestParams.get("DatabaseName");
-                if(!dao.databaseExists(dbname)){
-                    createNewDB(dbname);
-                }
-                else model.put("badDB","Database already exists!");
+                createDatabase(model,allRequestParams.get("DatabaseName"));
                 break;
             case "Create New Node":
-                int port=Integer.parseInt(allRequestParams.get("port"));
-                if(readServersManager.isPortFree(port))
-                    readServersManager.createNewReadNode(port);
-                else model.put("badnode","Port not available");
+                createNode(model,Integer.parseInt(allRequestParams.get("port")));
                 break;
             case "Stop Node":
                 readServersManager.stopNode(Integer.parseInt(allRequestParams.get("stoppedNode")));
@@ -132,23 +88,82 @@ public class AdminController {
         fillModel(model);
         return "adminPage";
     }
+
+    private void createNode(ModelMap model,int port) {
+        if(readServersManager.isPortFree(port))
+            readServersManager.createNewReadNode(port);
+        else model.put("badnode","Port not available");
+    }
+
+    private void createDatabase(ModelMap model,String DB) throws IOException {
+        if(!dao.databaseExists(DB)){
+            ObjectNode message=mapper.createObjectNode();
+            message.put("DB",DB);
+            message.put("op",Operation.SET_SCHEMA.name());
+            message.set("schema",mapper.createObjectNode());
+            if(!readServersManager.updateReadServers(message))
+                return;
+            dao.setDatabaseSchema(DB,mapper.createObjectNode());
+            logger.info(DB+" Database Created");
+        }
+        else model.put("badDB","Database already exists!");
+    }
+
+    private void changeAdmin(String username,String password) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        inMemManager.deleteUser(auth.getName());
+        HashSet<GrantedAuthority> x = new HashSet<>();
+        x.add((GrantedAuthority) () -> "ROLE_ADMIN");
+        UserDetails MasterAdmin = new User(username,password, x);
+        inMemManager.createUser(MasterAdmin);
+        logger.info("Admin Credentials changed");
+    }
+
+    private void deleteDatabase(String DB) throws IOException {
+        ObjectNode message=mapper.createObjectNode();
+        message.put("DB", DB);
+        message.put("op", Operation.DELETE_DATABASE.name());
+        if(!readServersManager.updateReadServers(message))
+            return;
+        List<DBUser> users=dao.getUsers();
+        for (DBUser u :users)
+            if(u.getDatabase().equals(DB)) {
+                dao.deleteUser(u.getUsername());
+                inMemManager.deleteUser(u.getUsername());
+            }
+        dao.deleteDatabase(DB);
+        logger.info("Deleted database "+ DB);
+    }
+
+    private void addUser(ModelMap model,String username,String DB,String password,String role) throws IOException {
+        DBUser user = new DBUser();
+        user.setUsername(username);
+        user.setDatabase(DB);
+        user.setPassword(password);
+        user.setRole(role);
+        if(!inMemManager.userExists(user.getUsername())&&
+                dao.databaseExists(DB)){
+            dao.addUser(user);
+            inMemManager.createUser(user);
+            model.put("good", "User Created!");
+            logger.info("Added new user");
+            return;
+        }
+        model.put("bad", "Creation Failed");
+    }
+
+    private void deleteUser(String username) throws IOException {
+        dao.deleteUser(username);
+        inMemManager.deleteUser(username);
+        logger.info("Deleted user "+username);
+    }
+
     private void fillModel(ModelMap model){
         List<DBUser> users=dao.getUsers();
         model.put("users",users);
         List<ReadServerNode> nodes = readServersManager.getRunningNodes();
         model.put("nodes",nodes);
-        List<String> databaseNames=dao.getDatabaseNames();
+        List<String> databaseNames=dao.getDatabases();
         model.put("dbs",databaseNames);
-    }
-
-    private void createNewDB(String db) throws IOException {
-        ObjectNode message=mapper.createObjectNode();
-        message.put("DB",db);
-        message.put("op",Operation.SET_SCHEMA.name());
-        message.set("schema",mapper.createObjectNode());
-        if(!readServersManager.updateReadServers(message))
-            return;
-        dao.setDatabaseSchema(db,mapper.createObjectNode());
-        logger.info(db+" Database Created");
     }
 }

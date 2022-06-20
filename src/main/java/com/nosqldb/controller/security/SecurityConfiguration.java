@@ -27,42 +27,43 @@ import java.util.HashSet;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-	@Autowired
-	ControllerDao dao;
-	@Override
-	public void configure(AuthenticationManagerBuilder auth) throws Exception {
-		auth.userDetailsService(inMemoryUserDetailsManager());
-	}
+    @Autowired
+    ControllerDao dao;
 
-	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/admin").hasRole("ADMIN")
-				.antMatchers("/read").hasRole("USER")
-				.antMatchers("/write/**").hasRole("USER")
-				.and().formLogin().and().csrf().disable();
-		http.httpBasic();
-	}
+    @Override
+    public void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(inMemoryUserDetailsManager());
+    }
 
-	@Bean
-	public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
-		InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager(createAdmin());
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests().antMatchers("/admin").hasRole("ADMIN")
+                .antMatchers("/read").hasRole("USER")
+                .antMatchers("/write/**").hasRole("USER")
+                .and().formLogin().and().csrf().disable();
+        http.httpBasic();
+    }
 
-		for(DBUser i : dao.getUsers())
-			manager.createUser(i);
+    @Bean
+    public InMemoryUserDetailsManager inMemoryUserDetailsManager() {
+        InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager(createAdmin());
 
-		return manager;
-	}
+        for (DBUser i : dao.getUsers())
+            manager.createUser(i);
 
-	@Bean
-	PasswordEncoder passwordEncoder() {
-		//TODO change
-		return NoOpPasswordEncoder.getInstance();
-	}
+        return manager;
+    }
 
-	private UserDetails createAdmin(){
-		HashSet<GrantedAuthority> x=new HashSet<>();
-		x.add((GrantedAuthority) () -> "ROLE_ADMIN");
-		return new User("admin","admin",x);
-	}
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        //TODO change
+        return NoOpPasswordEncoder.getInstance();
+    }
+
+    private UserDetails createAdmin() {
+        HashSet<GrantedAuthority> x = new HashSet<>();
+        x.add((GrantedAuthority) () -> "ROLE_ADMIN");
+        return new User("admin", "admin", x);
+    }
 
 }

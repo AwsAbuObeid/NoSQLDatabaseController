@@ -13,22 +13,22 @@ public class ReadServerSubject implements Subject {
     private final ArrayList<Observer> observers;
 
     public ReadServerSubject() {
-        observers =new ArrayList<>();
+        observers = new ArrayList<>();
     }
 
     @Override
     public void addObserver(Observer observer) {
-    observers.add(observer);
+        observers.add(observer);
     }
 
     @Override
     public void removeObserver(Observer observer) {
-    observers.remove(observer);
+        observers.remove(observer);
     }
 
     @Override
     public void notifyObservers(ObjectNode message) {
-    for (Observer o :observers)
-        o.update(message);
+        for (Observer o : observers)
+            o.update(message);
     }
 }
