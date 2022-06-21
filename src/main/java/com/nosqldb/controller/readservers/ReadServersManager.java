@@ -82,6 +82,7 @@ public class ReadServersManager {
             if (node.isDirty()) {
                 logger.info("attempting to fix read server id : " + node.getId() + " -restarting...");
                 node.stopContainer();
+                if
                 if (!node.runContainer()) {
                     logger.error("failed to restart stopping server id : " + node.getId());
                     stopNode(node.getId());
@@ -167,6 +168,7 @@ public class ReadServersManager {
                 committed = true;
                 break;
             }
+        commitNeeded=!committed;
         return committed;
     }
 
