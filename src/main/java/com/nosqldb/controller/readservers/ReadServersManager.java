@@ -27,6 +27,7 @@ public class ReadServersManager {
     private final Subject subject;
     private final ArrayList<ReadServerNode> readServerNodes;
     private final Logger logger = LoggerFactory.getLogger(ReadServersManager.class);
+    private boolean commitNeeded=false;
 
     public ReadServersManager() {
         idCount = 0;
@@ -40,7 +41,7 @@ public class ReadServersManager {
      * Attempts to commit a node, and create a new container from that image.
      */
     public void createNewReadNode(int port) {
-        if (count != 0 && !commitContainer()) {
+        if (count != 0 &&commitNeeded&& !commitContainer()) {
             logger.error("No container was committed.");
             logger.error("This is a critical error, newly created Nodes could have dirty data!");
             logger.error("Recommend restarting Database, and running more servers for data redundancy");
@@ -86,6 +87,7 @@ public class ReadServersManager {
                     stopNode(node.getId());
                 } else node.cleanNode();
             }
+        commitNeeded=true;
         return true;
     }
 
